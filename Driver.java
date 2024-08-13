@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -17,15 +16,9 @@ public class Driver implements Serializable {
     private String team;
     private int championships;
 
-    public Optional<String> getName() {
-        return Optional.ofNullable(name);
-    }
-
-    public Optional<String> getTeam() {
-        return Optional.ofNullable(team);
-    }
-
-    public int getChampionships() {
-        return championships;
+    public Driver(String name, String team) {
+        this.name = name;
+        this.team = team;
+        this.championships = 0;
     }
 }
