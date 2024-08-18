@@ -1,20 +1,30 @@
-document.addEventListener("DOMContentLoaded", function () {
-  fetch("/cgi-bin/f1_stat_checker")
-    .then((response) => response.json())
-    .then((data) => {
-      const resultsDiv = document.getElementById("results");
-      const raceResults = data.MRData.RaceTable.Races[0].Results;
+async function getF1Stats() {
+    const driverName = document.getElementById('driverName').value.trim();
+    const resultDiv = document.getElementById('result');
+    if (driverName === '') {
+        resultDiv.innerHTML = 'Please enter a driver\'s name.';
+        return;
+    }
 
-      raceResults.forEach((result, index) => {
-        const resultItem = document.createElement("div");
-        resultItem.className = "result-item";
-        resultItem.innerHTML = `${index + 1}. ${result.Driver.givenName} ${
-          result.Driver.familyName
-        } - ${result.Constructor.name} (${
-          result.Time ? result.Time.time : result.status
-        })`;
-        resultsDiv.appendChild(resultItem);
-      });
-    })
-    .catch((error) => console.error("Error fetching data:", error));
-});
+    resultDiv.innerHTML = 'Loading...';
+
+    try {
+        const response = await fetch(`/cgi-bin/f1_stats.cgi?driverName=${encodeURIComponent(driverName)}`);
+        const data = await response.json();
+
+        if (data.error) {
+            resultDiv.innerHTML = 'No results found. Please check the driver\'s name and try again.';
+            return;
+        }
+
+        resultDiv.innerHTML = `
+            <p><strong>${data.driver}</strong></p>
+            <p>Team: ${data.team}</p>
+            <p>Position: ${data.position}</p>
+            <p>Points: ${data.points}</p>
+            <p>Wins: ${data.wins}</p>
+        `;
+    } catch (error) {
+        resultDiv.innerHTML = 'An error occurred while fetching data. Please try again later.';
+    }
+}
