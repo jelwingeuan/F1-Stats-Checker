@@ -2,52 +2,54 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Function to extract the query parameter
-void get_query_param(char *query, char *driverName) {
-    if (query == NULL) {
+// Function to send the HTML file as a response
+void serve_html() {
+    FILE *file = fopen("../templates/index.html", "r");
+    if (file == NULL) {
+        printf("Content-type: text/html\n\n");
+        printf("<html><body><h1>Error 404: File not found</h1></body></html>");
         return;
     }
 
-    char *token = strtok(query, "=");
-    while (token != NULL) {
-        if (strcmp(token, "driverName") == 0) {
-            token = strtok(NULL, "=");
-            if (token != NULL) {
-                strcpy(driverName, token);
-            }
-            break;
-        }
-        token = strtok(NULL, "=");
+    printf("Content-type: text/html\n\n");
+
+    char line[1024];
+    while (fgets(line, sizeof(line), file)) {
+        printf("%s", line);
     }
+    fclose(file);
 }
 
-// Function to simulate fetching driver stats (you can replace this with real API calls)
+// Function to handle fetching driver stats
 void fetch_driver_stats(char *driverName) {
-    // Simulate returning driver data
+    printf("Content-type: application/json\n\n");
     if (strcmp(driverName, "hamilton") == 0) {
-        printf("Content-type: application/json\n\n");
         printf("{ \"driver\": \"Lewis Hamilton\", \"team\": \"Mercedes\", \"position\": \"1\", \"points\": \"347\", \"wins\": \"11\" }\n");
     } else if (strcmp(driverName, "verstappen") == 0) {
-        printf("Content-type: application/json\n\n");
         printf("{ \"driver\": \"Max Verstappen\", \"team\": \"Red Bull\", \"position\": \"2\", \"points\": \"342\", \"wins\": \"9\" }\n");
     } else {
-        printf("Content-type: application/json\n\n");
         printf("{ \"error\": \"Driver not found\" }\n");
     }
 }
 
 int main(void) {
     char *query = getenv("QUERY_STRING");
-    char driverName[50] = "";
 
-    // Extract the driver's name from the query parameter
-    get_query_param(query, driverName);
-
-    // Output the HTTP headers
-    printf("Content-type: text/html\n\n");
-
-    // Fetch and output driver stats
-    fetch_driver_stats(driverName);
+    if (query == NULL || strcmp(query, "") == 0) {
+        // If there's no query, serve the HTML page
+        serve_html();
+    } else {
+        // If there's a query, handle it as an API request
+        char driverName[50] = "";
+        char *token = strtok(query, "=");
+        if (token != NULL && strcmp(token, "driverName") == 0) {
+            token = strtok(NULL, "=");
+            if (token != NULL) {
+                strcpy(driverName, token);
+                fetch_driver_stats(driverName);
+            }
+        }
+    }
 
     return 0;
 }
